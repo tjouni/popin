@@ -1,4 +1,4 @@
-## Data collection for kissat koiria äpplykäätiö
+## Data collection for popin
 
 * Scrape for hashtags with https://console.apify.com/actors/reGe1ST3OBgYZSsZJ
 * Save file as hashtag.json
