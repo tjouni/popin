@@ -3,4 +3,4 @@
 
 ## architecture
 
-!(https://github.com/tjouni/popin/raw/main/arch.png)
+![application architecture diagram](https://github.com/tjouni/popin/raw/main/arch.png)
