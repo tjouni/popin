@@ -1,0 +1,214 @@
+<template>
+  <div class="drop" 
+    :class="getClasses" 
+    @dragover.prevent="dragOver" 
+    @dragleave.prevent="dragLeave"
+    @drop.prevent="drop($event)">
+    <div class="column">
+      <img :src="imageSource" v-if="imageSource" />
+      <h1 v-if="wrongFile">Wrong file type</h1>
+      <h1 v-if="!imageSource && !isDragging && !wrongFile">Drop an image</h1>
+      <h1 v-if="imageSource && !ranking">LOADING</h1>
+      <h1 v-if="imageSource && ranking">{{ranking}}/10!</h1>
+      <div v-if="imageSource && ranking" id="progress-bar-container">
+		    <div class="progress-bar-child progress"></div>
+		    <div class="progress-bar-child shrinker timelapse" :style="cssVars" ></div>
+      </div>
+    </div>
+    <label class="manual" for="uploadmyfile">
+        <p>or pick from device</p>
+        <input type="file" id="uploadmyfile" :accept="'image/*'" @change="requestUploadFile">
+    </label>
+  </div>
+</template>
+
+
+
+<script>
+import axios from 'axios';
+export default {
+  name: 'DropAnImage',
+  data(){
+    return{
+      isDragging:false,
+      wrongFile:false,
+      imageSource:null,
+      ranking:null,
+      width:60
+    }
+  },
+  computed:{
+    getClasses(){
+      return {isDragging: this.isDragging}
+    },
+    cssVars() {
+      return {
+        '--width': this.width + '%'
+      }
+    }
+  },
+  methods:{
+    dragOver(){
+      this.isDragging = true
+    },
+    dragLeave(){
+      this.isDragging = false
+    },
+    drop(e){
+      let files = e.dataTransfer.files
+
+      this.wrongFile = false
+
+      if (files.length === 1) {
+
+        let file = files[0]
+        
+        if (file.type.indexOf('image/') >= 0) {
+
+          var reader = new FileReader()
+          reader.onload = f => {
+            this.imageSource = f.target.result
+            this.isDragging = false
+          }
+          reader.readAsDataURL(file)
+          this.sendToLambda()
+        }else{
+          this.wrongFile = true
+          this.imageSource = null
+          this.isDragging = false
+        }
+      }
+    },
+    requestUploadFile(){
+      var src = this.$el.querySelector('#uploadmyfile')
+      this.drop({dataTransfer:src})
+    },
+
+    getBase64(file) {
+        const reader = new FileReader()
+        return new Promise(resolve => {
+            reader.onload = ev => {
+                resolve(ev.target.result)
+            }
+            reader.readAsDataURL(file)
+        })
+    },
+
+    sendToLambda() {
+      this.ranking = null;
+      axios.post("https://0kpzyjiqoi.execute-api.eu-north-1.amazonaws.com/Dev", {
+        message: "Hello Python"
+      }).then((response) => {
+        this.ranking = response.data["body"]
+        this.width = 100-this.ranking*10
+      }, (error) => {
+        console.log(error);
+      });
+    }
+  }
+}
+</script>
+
+
+
+<style scoped>
+.drop{
+  width: 360px;
+  height: 780px;
+  background-color: #eee;
+  border:10px solid #eee;
+  border-radius: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 1rem;
+
+  font-family: sans-serif;
+  
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0px 0px 0px 11px #1f1f1f, 0px 0px 0px 13px #191919, 0px 0px 0px 20px #111;
+  left: 5%;
+  top: 5%;
+}
+
+.isDragging{
+  background-color: #999;
+  border-color: #fff;
+}
+
+img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.manual{
+  position: absolute;
+  bottom:0;
+  width:100%;
+  text-align:center;
+  font-size:.8rem;
+  text-decoration: underline;
+}
+#uploadmyfile{
+  display: none;
+}
+
+.manual:hover {
+  background-color:  #999;
+  cursor: pointer;
+}
+
+#progress-bar-container {
+	width: 90%;
+	height: 6%;
+	position: absolute;
+	transform: translateY(-50%);
+	border-radius: 40px;
+	overflow: hidden;
+}
+
+.progress-bar-child {
+	width: 100%;
+	height: 100%;
+}
+
+.progress {
+	color: white;
+	text-align: center;
+	line-height: 75px;
+	font-size: 35px;
+	font-family: "Segoe UI";
+	animation-direction: reverse;
+	background: #e5405e;
+	background: linear-gradient(to right, #e04f6a 0%, #ffdb3a 45%, #3fffa2 100%);
+}
+
+.shrinker {
+	background-color: black;
+	position: absolute;
+	top: 0;
+	right: 0;
+  width: var(--width);
+}
+
+.timelapse {
+	animation-name: timelapse;
+	animation-fill-mode: forwards;
+	animation-duration: 2s;
+	animation-timing-function: cubic-bezier(.86, .05, .4, .96);
+}
+
+@keyframes timelapse {
+	0% {
+		width: 100%;
+	}
+	100% {
+		width: var(--width);
+	}
+}
+
+</style>

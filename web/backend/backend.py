@@ -1,5 +1,4 @@
 # TODO: deploy as lambda, remove unnecessary code
-
 import os
 import boto3
 import torch
@@ -8,6 +7,7 @@ import torch.nn as nn
 import torchvision.transforms as T
 from lightning import Insta
 from io import BytesIO
+from http_response import http_response 
 
 
 import base64
@@ -17,10 +17,10 @@ import PIL
 S3 = boto3.client("s3")
 
 
-def get_fake_event():
-    with open("2940801053738400977.jpg", "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read())
-    return {"body": encoded_string}
+# def get_fake_event():
+#     with open("2940801053738400977.jpg", "rb") as image_file:
+#         encoded_string = base64.b64encode(image_file.read())
+#     return {"body": encoded_string}
 
 
 def inverse_transform(x):
@@ -28,15 +28,17 @@ def inverse_transform(x):
 
 
 def handler(event, context):
-    image_string = base64.b64decode(event["body"])
-    filename = "kuva.jpg"
-    with open("kuva.jpg", "wb") as image_file:
-        image_file.write(image_string)
-    img = PIL.Image.open(filename)
-    img.show()
-    model = Predictor()
-    result = model.forward(img)
-    print(float(inverse_transform(result[0][0])))
+    print("HELLO")
+    # image_string = base64.b64decode(event["body"])
+    # filename = "kuva.jpg"
+    # with open("kuva.jpg", "wb") as image_file:
+    #     image_file.write(image_string)
+    # img = PIL.Image.open(filename)
+    # img.show()
+    # model = Predictor()
+    # result = model.forward(img)
+    # print(float(inverse_transform(result[0][0])))
+    return http_response(200, "Success", "Hello From Lambda", None)
 
 
 class Predictor(nn.Module):
@@ -44,7 +46,7 @@ class Predictor(nn.Module):
         super(Predictor, self).__init__()
         filename = f"/tmp/{os.path.basename('model.ckpt')}"
         S3.download_file(
-            "jounin-testi-ampari", "preliminary_weights.ckpt", Filename=filename
+            "popin-data-bucket", "preliminary_weights.ckpt", Filename=filename
         )
         model = torch.load(filename, map_location=torch.device("cpu"))
         self.net = Insta.load_from_checkpoint(filename)
@@ -61,5 +63,5 @@ class Predictor(nn.Module):
         return result
 
 
-event = get_fake_event()
-handler(event, None)
+# event = get_fake_event()
+#handler(event, None)
