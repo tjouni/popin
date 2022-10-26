@@ -1,38 +1,36 @@
 service: popin-backend
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   region: eu-north-1
   name: aws
   runtime: python3.8
+  ecr:
+    images:
+      appimage:
+        path: ./
   iam:
     role:
       statements:
-        - Effect: "Allow"
+        - Effect: Allow
           Action:
-            - "ecr:InitiateLayerUpload"
-            - "ecr:SetRepositoryPolicy"
-            - "ecr:GetRepositoryPolicy"
-          Resource: [ "arn:aws:ecr:eu-north-1:925874818011:repository/*" ]
+            - "s3:*"
+          Resource:
+            - "arn:aws:s3:::popin-data-bucket/*"
+
 functions:
   popin:
-    image: 925874818011.dkr.ecr.eu-north-1.amazonaws.com/popin:latest
+    timeout: 60
+    image:
+      name: appimage
     events:
-      - httpApi:
+      - http:
           path: /
           method: post
-
-plugins:
-  - serverless-python-requirements
-
-custom:
-  pythonRequirements:
-    dockerizePip: true
-    cacheLocation: ./.serverless/.requirements_cache
+          cors: true
 
 package:
   excludeDevDependencies: true
   patterns:
     - "!venv/**"
     - "!node_modules/**"
-

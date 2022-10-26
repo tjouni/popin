@@ -23,7 +23,6 @@
 </template>
 
 
-
 <script>
 import axios from 'axios';
 export default {
@@ -71,7 +70,7 @@ export default {
             this.isDragging = false
           }
           reader.readAsDataURL(file)
-          this.sendToLambda()
+          this.sendToLambda(file)
         }else{
           this.wrongFile = true
           this.imageSource = null
@@ -94,16 +93,18 @@ export default {
         })
     },
 
-    sendToLambda() {
+    async sendToLambda(file) {
       this.ranking = null;
-      axios.post("https://0kpzyjiqoi.execute-api.eu-north-1.amazonaws.com/Dev", {
-        message: "Hello Python"
-      }).then((response) => {
-        this.ranking = response.data["body"]
-        this.width = 100-this.ranking*10
-      }, (error) => {
-        console.log(error);
-      });
+      await this.getBase64(file).then(data => {
+        axios.post("https://xzay8zcyl7.execute-api.eu-north-1.amazonaws.com/dev/", {
+          "body": data
+        }).then((response) => {
+          this.ranking = Math.min(response.data["body"], 10)
+          this.width = 100-this.ranking*10
+        }, (error) => {
+          console.log(error);
+        });
+      })
     }
   }
 }
