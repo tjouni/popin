@@ -25,9 +25,8 @@ functions:
       name: appimage
     events:
       - http:
-          path: /
+          path: api
           method: post
-          cors: true
 
 package:
   excludeDevDependencies: true

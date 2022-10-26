@@ -1,7 +1,7 @@
-# TODO: deploy as lambda, remove unnecessary code
 import os
 import boto3
 import torch
+import json
 import re
 import pytorch_lightning
 import torch.nn as nn
@@ -14,13 +14,6 @@ import PIL
 
 
 S3 = boto3.client("s3")
-s3 = boto3.resource("s3")
-
-
-# def get_fake_event():
-#     with open("2940801053738400977.jpg", "rb") as image_file:
-#         encoded_string = base64.b64encode(image_file.read())
-#     return {"body": encoded_string}
 
 
 def inverse_transform(x):
@@ -28,30 +21,19 @@ def inverse_transform(x):
 
 
 def handler(event, context):
-    base64_data = re.sub("^data:image/.+;base64,", "", event["body"])
+    print(json.dumps(event))
+    base64_data = re.sub(
+        "^data:image/.+;base64,", "", json.loads(event["body"])["body"]
+    )
     image_string = base64.b64decode(base64_data)
-    filename = "/tmp/kuva"
+    filename = "/tmp/kuva.jpg"
     with open(filename, "wb+") as image_file:
-        # image_to_s3("popin-data-bucket", filename, image_file)
         image_file.write(image_string)
     img = PIL.Image.open(filename)
-    # img = image_from_s3("popin-data-bucket", filename)
     model = Predictor()
     result = model.forward(img)
-    result = (float(inverse_transform(result[0][0])) / 1.5) * 10
+    result = min((float(result[0][0]) / 1.5), 1)
     return {"statusCode": 200, "body": result}
-
-
-def image_to_s3(bucket, key, data):
-    object = s3.Object(bucket, key)
-    object.put(Body=data)
-
-
-def image_from_s3(bucket, key):
-    bucket = s3.Bucket(bucket)
-    image = bucket.Object(key)
-    img_data = image.get().get("Body").read()
-    return PIL.Image.open(BytesIO(img_data))
 
 
 class Predictor(nn.Module):
@@ -74,7 +56,3 @@ class Predictor(nn.Module):
             else:
                 result = self.net(batch)
         return result
-
-
-# event = get_fake_event()
-# handler(event, None)

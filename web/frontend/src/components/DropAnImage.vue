@@ -9,7 +9,7 @@
       <h1 v-if="wrongFile">Wrong file type</h1>
       <h1 v-if="!imageSource && !isDragging && !wrongFile">Drop an image</h1>
       <h1 v-if="imageSource && !ranking">LOADING</h1>
-      <h1 v-if="imageSource && ranking">{{ranking}}/10!</h1>
+      <h1 v-if="imageSource && ranking">{{score}}/10!</h1>
       <div v-if="imageSource && ranking" id="progress-bar-container">
 		    <div class="progress-bar-child progress"></div>
 		    <div class="progress-bar-child shrinker timelapse" :style="cssVars" ></div>
@@ -33,6 +33,7 @@ export default {
       wrongFile:false,
       imageSource:null,
       ranking:null,
+      score:null,
       width:60
     }
   },
@@ -93,18 +94,18 @@ export default {
         })
     },
 
-    async sendToLambda(file) {
+    sendToLambda(file) {
       this.ranking = null;
-      await this.getBase64(file).then(data => {
-        axios.post("https://xzay8zcyl7.execute-api.eu-north-1.amazonaws.com/dev/", {
+      this.getBase64(file).then(data => {
+        return axios.post("https://d3jmnpsj1wjh47.cloudfront.net/api", {
           "body": data
-        }).then((response) => {
-          this.ranking = Math.min(response.data["body"], 10)
-          this.width = 100-this.ranking*10
+        })}).then((response) => {
+          this.ranking = response.data
+          this.score = Math.round(this.ranking*10)
+          this.width = 100-Math.round(this.ranking*100)
         }, (error) => {
           console.log(error);
         });
-      })
     }
   }
 }
