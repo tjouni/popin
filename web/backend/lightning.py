@@ -2,17 +2,20 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import pytorch_lightning as pl
-from networks import Regressor
+from networks import Regressor, Pretrained_regressor
 
 
 class Insta(pl.LightningModule):
-    def __init__(self, dim=32, lr=3e-4, weight_decay=1e-3, transform_target=True):
+    def __init__(self, dim=32, lr=3e-4, weight_decay=1e-3, transform_target=False, pretrained=False):
         super().__init__()
         
         self.save_hyperparameters()
         
-        self.net = Regressor(dim, transform_target)
-        self.loss = nn.MSELoss()
+        if self.hparams.pretrained:
+            self.net = Pretrained_regressor()
+        else:
+            self.net = Regressor(dim)
+        self.loss = nn.L1Loss()
         
     def forward(self, x):
         """

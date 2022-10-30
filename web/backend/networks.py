@@ -1,16 +1,16 @@
 import torch
 import torch.nn as nn
 from utils import GeM
+from torchvision import models
 
 
 # We intentionally make the model shallow as there is more info about
 # image texture in first layers than in last ones, which are more abstract.
 class Regressor(nn.Module):
-    def __init__(self, dim=32, transform_target=True):
+    def __init__(self, dim=32):
         super(Regressor, self).__init__()
         
         self.dim = dim
-        self.transform_target = transform_target
         
         self.conv1 = nn.Conv2d(3, dim, kernel_size=3, padding=1, padding_mode='reflect')
         self.bn1 = nn.BatchNorm2d(dim)
@@ -24,8 +24,7 @@ class Regressor(nn.Module):
         self.bn5 = nn.BatchNorm2d(dim*16)
         self.conv6 = nn.Conv2d(dim*16, dim*32, kernel_size=3, padding=1, padding_mode='reflect')
         self.bn6 = nn.BatchNorm2d(dim*32)
-        self.fc1 = nn.Linear(dim*32, dim*4)
-        self.fc2 = nn.Linear(dim*4, 1)
+        self.fc1 = nn.Linear(dim*32, 1)
         
         self.pool = nn.AvgPool2d(kernel_size=4, stride=2)
         self.global_pool = GeM()
@@ -33,6 +32,7 @@ class Regressor(nn.Module):
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, x):
+        
         x = self.act(self.bn1(self.conv1(x)))
         x = self.pool(x)
         x = self.act(self.bn2(self.conv2(x)))
@@ -46,9 +46,45 @@ class Regressor(nn.Module):
         x = self.act(self.bn6(self.conv6(x)))
         x = self.global_pool(x)
         x = x.view(x.size(0), -1)
-        x = self.act(self.fc1(x))
-        if self.transform_target:
-            x = self.sigmoid(self.fc2(x))
-        else:
-            x = self.fc2(x)
+        x = self.sigmoid(self.fc1(x))
+        return x
+    
+    
+class Pretrained_regressor(nn.Module):
+    def __init__(self):
+        super(Pretrained_regressor, self).__init__()
+        
+        net = models.resnet18(pretrained=True)
+        
+        self.conv1 = net.conv1
+        self.bn1 = net.bn1
+        self.relu = net.relu
+        self.maxpool = net.maxpool
+        self.layer1 = net.layer1
+        self.layer2 = net.layer2
+        self.layer3 = net.layer3
+        self.layer4 = net.layer4
+        self.global_pool = GeM()
+        self.fc = nn.Linear(512, 1)
+        self.sigmoid = nn.Sigmoid()
+        
+        # for param in self.conv1.parameters():
+        #     param.requires_grad = False
+        # for param in self.bn1.parameters():
+        #     param.requires_grad = False
+        # for param in self.layer1.parameters():
+        #     param.requires_grad = False
+        # for param in self.layer2.parameters():
+        #     param.requires_grad = False
+        
+    def forward(self, x):
+        x = self.relu(self.bn1(self.conv1(x)))
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.global_pool(x)
+        x = x.view(x.size(0), -1)
+        x = self.sigmoid(self.fc(x))
         return x
