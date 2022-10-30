@@ -103,14 +103,11 @@ export default {
         return axios.post("https://d3jmnpsj1wjh47.cloudfront.net/api", {
           "body": data
         })}).then((response) => {
-          this.ranking = (response.data / 0.3)
+          this.ranking = Math.min((response.data / 0.3), 1)
           this.score = Math.round(this.ranking*10)
           this.width = 100-Math.round(this.ranking*100)
         }, (error) => {
           console.log(error)
-          this.ranking = (0.08 / 0.3)
-          this.score = Math.round(this.ranking*10)
-          this.width = 100-Math.round(this.ranking*100)
         });
     }
   }
