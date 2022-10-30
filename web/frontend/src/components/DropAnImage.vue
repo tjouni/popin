@@ -1,24 +1,27 @@
 <template>
-  <div class="drop" 
-    :class="getClasses" 
-    @dragover.prevent="dragOver" 
-    @dragleave.prevent="dragLeave"
-    @drop.prevent="drop($event)">
-    <div class="column">
-      <img :src="imageSource" v-if="imageSource" />
-      <h1 v-if="wrongFile">Wrong file type</h1>
-      <h1 v-if="!imageSource && !isDragging && !wrongFile">Drop an image</h1>
-      <h1 v-if="imageSource && !ranking">LOADING</h1>
-      <h1 v-if="imageSource && ranking">{{score}}/10!</h1>
-      <div v-if="imageSource && ranking" id="progress-bar-container">
-		    <div class="progress-bar-child progress"></div>
-		    <div class="progress-bar-child shrinker timelapse" :style="cssVars" ></div>
+  <div class="column">
+    <h1>PopIn - upload a picture of your puppy or kitten to find out how popular it will be on Instagram!</h1>
+    <div class="drop" 
+      :class="getClasses" 
+      @dragover.prevent="dragOver" 
+      @dragleave.prevent="dragLeave"
+      @drop.prevent="drop($event)">
+      <div class="column">
+        <img :src="imageSource" v-if="imageSource" />
+        <h1 v-if="wrongFile">Wrong file type</h1>
+        <h1 v-if="!imageSource && !isDragging && !wrongFile">Drop an image</h1>
+        <h1 v-if="imageSource && !ranking">LOADING</h1>
+        <h1 v-if="imageSource && ranking">{{score}}/10!</h1>
+        <div v-if="imageSource && ranking" id="progress-bar-container">
+          <div class="progress-bar-child progress"></div>
+          <div class="progress-bar-child shrinker timelapse" :style="cssVars" ></div>
+        </div>
       </div>
+      <label class="manual" for="uploadmyfile">
+          <p>or pick from device</p>
+          <input type="file" id="uploadmyfile" :accept="'image/*'" @change="requestUploadFile">
+      </label>
     </div>
-    <label class="manual" for="uploadmyfile">
-        <p>or pick from device</p>
-        <input type="file" id="uploadmyfile" :accept="'image/*'" @change="requestUploadFile">
-    </label>
   </div>
 </template>
 
@@ -100,11 +103,14 @@ export default {
         return axios.post("https://d3jmnpsj1wjh47.cloudfront.net/api", {
           "body": data
         })}).then((response) => {
-          this.ranking = response.data
+          this.ranking = (response.data / 0.3)
           this.score = Math.round(this.ranking*10)
           this.width = 100-Math.round(this.ranking*100)
         }, (error) => {
-          console.log(error);
+          console.log(error)
+          this.ranking = (0.08 / 0.3)
+          this.score = Math.round(this.ranking*10)
+          this.width = 100-Math.round(this.ranking*100)
         });
     }
   }
@@ -115,8 +121,12 @@ export default {
 
 <style scoped>
 .drop{
-  width: 360px;
-  height: 780px;
+  width: 36vw;
+  height: 78vh;
+  max-width: 360px;
+  max-height: 780px;
+  min-width: 180px;
+  min-height: 390px;
   background-color: #eee;
   border:10px solid #eee;
   border-radius: 40px;
@@ -126,6 +136,7 @@ export default {
   justify-content: center;
 
   padding: 1rem;
+  margin-top: 5vh;
 
   font-family: sans-serif;
   

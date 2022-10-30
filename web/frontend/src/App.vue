@@ -10,12 +10,11 @@
 
 <script>
 import DropAnImage from './components/DropAnImage.vue'
-import TriggerUploadDialog from './components/TriggerUploadDialog.vue'
 
 export default {
   name: 'app',
   components: {
-    DropAnImage, TriggerUploadDialog
+    DropAnImage
   }
 }
 </script>
@@ -41,6 +40,6 @@ body{
 .parent-wrapper{
   margin-bottom:1rem;
   width:100%;
-  height:100%; /* was 50% */
+  height:100%;
 }
 </style>
