@@ -32,14 +32,14 @@ def handler(event, context):
     img = PIL.Image.open(filename)
     model = Predictor()
     result = model.forward(img)
-    result = min((float(result[0][0]) / 1.5), 1)
+    result = float(result[0][0])
     return {"statusCode": 200, "body": result}
 
 
 class Predictor(nn.Module):
     def __init__(self):
         super(Predictor, self).__init__()
-        filename = f"/tmp/{os.path.basename('model.ckpt')}"
+        filename = f"/tmp/model.ckpt"
         S3.download_file(
             "popin-data-bucket", "pretrained_without_tt.ckpt", Filename=filename
         )
