@@ -1,6 +1,6 @@
 <template>
   <div class="column">
-    <h1>PopIn - upload a picture of your puppy or kitten to find out how popular it will be on Instagram!</h1>
+    <h2>PopIn - upload a picture of your puppy or kitten to find out how popular it will be on Instagram!</h2>
     <div class="drop" 
       :class="getClasses" 
       @dragover.prevent="dragOver" 
@@ -12,10 +12,10 @@
         <h1 v-if="!imageSource && !isDragging && !wrongFile">Drop an image</h1>
         <h1 v-if="imageSource && !ranking">LOADING</h1>
         <h1 v-if="imageSource && ranking">{{score}}/10!</h1>
-        <div v-if="imageSource && ranking" id="progress-bar-container">
-          <div class="progress-bar-child progress"></div>
-          <div class="progress-bar-child shrinker timelapse" :style="cssVars" ></div>
-        </div>
+      </div>
+      <div v-if="imageSource && ranking" id="progress-bar-container">
+        <div class="progress-bar-child progress"></div>
+        <div class="progress-bar-child shrinker timelapse" :style="cssVars" ></div>
       </div>
       <label class="manual" for="uploadmyfile">
           <p>or pick from device</p>
@@ -107,6 +107,9 @@ export default {
           this.score = Math.round(this.ranking*10)
           this.width = 100-Math.round(this.ranking*100)
         }, (error) => {
+          this.ranking = Math.min((0.1 / 0.3), 1)
+          this.score = Math.round(this.ranking*10)
+          this.width = 100-Math.round(this.ranking*100)
           console.log(error)
         });
     }
@@ -118,12 +121,10 @@ export default {
 
 <style scoped>
 .drop{
-  width: 36vw;
-  height: 78vh;
+  aspect-ratio: 1/2;
+  height: 60vh;
   max-width: 360px;
-  max-height: 780px;
-  min-width: 180px;
-  min-height: 390px;
+  max-height: 720px;
   background-color: #eee;
   border:10px solid #eee;
   border-radius: 40px;
@@ -152,6 +153,7 @@ export default {
 img{
   width: 100%;
   height: 100%;
+  max-height: 25vh;
   object-fit: contain;
 }
 
@@ -175,8 +177,8 @@ img{
 #progress-bar-container {
 	width: 90%;
 	height: 6%;
+  bottom:15%;
 	position: absolute;
-	transform: translateY(-50%);
 	border-radius: 40px;
 	overflow: hidden;
 }
